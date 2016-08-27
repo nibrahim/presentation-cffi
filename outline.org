@@ -1,0 +1,113 @@
+* Introduction
+** About me
+   - Founder of Hamon Technologies and Co founder of Pipal Academy.
+   - Automation/Infrastructure/IoT work and trainings.
+   - Also mentor students via. The Lycaeum.
+   - Long time Python user and been involved with PyCon since the
+     first conference.
+   - Amateur Calligrapher.
+** Coupling between languages
+   - Loose to tight
+   - Web based APIs.
+     - REST APIs, XML-RPC etc.
+     - Could be implemented in another language, in another
+       location, on another platform but you can use it from your
+       language.
+       - Slow, serialisation/deserialisation overhead, transmission issues
+   - IPC
+     - UNIX domain sockets, shared memory, signals.
+     - Faster than above and gave us the UNIX shell
+     - Some of them (e.g. signals) are very limited.
+     - This is a nail and I have an HTTP hammer.
+   - Common runtime
+     - Languages on top of the JVM.
+     - Allows languages to use APIs from others with some common conventions.
+   - True FFI
+     - Calling functions outside your current runtime.
+     - e.g. Java JNI, Python ctypes
+     - This is our topic of discussion.
+** An aside - language wars
+   - Language warriors love to proclaim the awesomeness of their own
+     language, philosophy, programming style etc.
+   - But languages themselves are not that opinionated. They don't
+     complain if you call something written in another language.
+   - The *real* barrier for cooperation is stuck up programmers. Not
+     languages or technologies.
+** About the talk
+   - Using Python testing tools to test libraries in lower level languages.
+   - As a specific example, my cpslib library
+     https://github.com/nibrahim/cpslib (in C) and the tests for it in Python.
+   - Mostly going to be talking about ways of interfacing C and Python
+     with special emphasis on cffi
+
+** Cpslib
+   - cpslib is a partial port of psutils to C.
+   - Allows you to query process and system information in a cross
+     platform fashion (e.g. number of CPUs etc.)
+   - Example
+
+     #+BEGIN_SRC c
+       uint32_t cpu_count(bool);
+       void 
+       main() 
+       {
+         uint32_t physical;
+         physical = cpu_count(false);
+         printf("Physical : %" PRIu32 "\n", physical);
+       }
+
+     #+END_SRC
+   - The original idea was to make it compatible with psutils.
+   - So we have something to test against.
+
+* FFI in Python
+** Ctypes 
+   - The Python stdlib ffi module.
+   - Example wrapping
+  #+BEGIN_SRC python
+   cdll = ctypes.CDLL("./libpslib.so")
+   cdll.cpu_count(True) # 4
+   cdll.cpu_count(False) # 1
+  #+END_SRC
+   - Slightly more complex when you have non trivial types
+  #+BEGIN_SRC c
+    char *
+    left_pad_string(char *ip, size_t ip_count, size_t pad_count)
+    {
+      char * ret;
+      uint32_t i, j;
+      ret = (char *)calloc(pad_count, sizeof(char));
+      for (i=0; i<(pad_count - ip_count); i++) {
+        ret[i] = ' ';
+      }
+      for (j=0; j<ip_count; j++, i++) {
+        ret[i] = ip[j];
+      }
+      ret[i] = '\0';
+      return ret;
+    }
+  #+END_SRC
+  - Let's try to wrap this in Python
+  #+BEGIN_SRC python
+    from ctypes import *
+    leftpad = CDLL("./libleftpad.so")
+
+    leftpad.left_pad_string.argtypes = [c_char_p, c_size_t, c_size_t]
+    leftpad.left_pad_string.restype = c_char_p
+
+    ip = "python".encode('ascii')
+    ret = leftpad.left_pad_string(ip, len(ip), 15)
+
+    print ("'{}'".format(ret))
+  #+END_SRC
+  - This will work in CPython and PyPy without any modifications (on
+    Gnu/Linux anyway).
+  - This is great. Why cffi then?
+** 
+  
+  
+     
+     
+  
+
+
