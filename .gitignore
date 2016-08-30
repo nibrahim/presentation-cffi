@@ -1,2 +1,4 @@
 leftpad
 *.so
+*.o
+__pycache__

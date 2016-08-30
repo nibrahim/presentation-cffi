@@ -103,10 +103,56 @@
   - This will work in CPython and PyPy without any modifications (on
     Gnu/Linux anyway).
   - This is great. Why cffi then?
-** 
+** CFFI 
+   - CFFI is a better alternative for many reasons
+     - No DSL (c_size_t etc.)
+     - Can work at API or ABI level. The former is more portable.
+     - Apparently faster because of custom code.
+   - Using the ABI
+
+#+BEGIN_SRC python
+  import cffi
+
+  ffi = cffi.FFI()
+  ffi.cdef("""
+  char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);
+  """)
+
+  leftpad = ffi.dlopen("./libleftpad.so")
+
+  ip = "python"
+  op = leftpad.left_pad_string(ip, len(ip), 20)
+  print "'{}'".format(ffi.string(op))
+
+#+END_SRC
   
-  
-     
+   - Using the API
+   - We need a build script
+
+#+BEGIN_SRC python
+  # leftpad_cffi_build.py
+
+  from cffi import FFI
+
+  ffi = FFI()
+  ffi.set_source('leftpad', 'char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);',
+                 libraries=["leftpad"],
+                 library_dirs=['.'])
+
+  ffi.cdef("""
+  char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);
+  """)
+
+
+  if __name__ == '__main__':
+      ffi.compile()
+
+#+END_SRC
+
+
+
+* TODO 
+  - [ ] Why the warnings when compiling the module?
      
   
 
