@@ -148,11 +148,36 @@
       ffi.compile()
 
 #+END_SRC
+  - Removes much of the pain of writing C extensions.
+  - The build scripts can generate C extensions compatible with PyPy
+    too.
+* Testing libraries
+   - Trivially easy to wrap libraries
+   - =set_source= for headers and =cdef= for all declarations
+   - Then build it.
+   - Now we can use this from within python
+   - An example test for =left_pad_string= would be
 
+#+BEGIN_SRC python
+
+  # test_leftpad
+  from leftpad_cffi_api import leftpad
+
+  def test_leftpad():
+      ip = "python"
+      assert leftpad(ip) == ip.rjust(20)
+
+#+END_SRC
+
+   - Can be run using =py.test=
+   - 
+     
+   
 
 
 * TODO 
   - [ ] Why the warnings when compiling the module?
+  - [ ] Demo with PyPy as well 
      
   
 
