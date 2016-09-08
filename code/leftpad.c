@@ -25,6 +25,7 @@ main()
 {
   char ip[] = "python";
   char *op = left_pad_string(ip, strlen(ip), 15);
+  printf("'%s'\n", op);
   free(op);
   return 0;
 }
