@@ -2,3 +2,12 @@ leftpad
 *.so
 *.o
 __pycache__
+*.gcov
+*.gcda
+*.gcno
+a.out
+*.dvi
+*.tex
+*.pdf
+pyleftpad.c
+.cache/
