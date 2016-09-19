@@ -138,6 +138,10 @@
 #+BEAMER: \pause
   - The build scripts can generate C extensions compatible with PyPy
     too.
+#+BEAMER: \pause
+  - Though higher level abstractions are usually a good idea.
+
+
 ** Using the generated C extension
    #+BEGIN_SRC python
      import pyleftpad # Loads a native C extension
@@ -185,22 +189,48 @@ Ctypes   2.9284197089982626
 #+END_SRC
 
    - Can be run using =py.test=
-   - Higher level abstractions are usually a good idea.
+
+** Wrapping cpslib
+#+BEGIN_SRC python
+ffi.set_source("pycpslib",
+               """#include <stdio.h>
+               #include <stdlib.h>
+               #include <sys/types.h>
+               #include <unistd.h>
+               #include "pslib.h"
+               """,
+               libraries = ["pslib"],
+               library_dirs = [project_root],
+               include_dirs = [project_root])
+
+ffi.cdef('''
+typedef int32_t pid_t;
+typedef int32_t bool;
+''')
+
+with lines = open("../pslib.h").readlines()
+altered_lines = ['' if line.startswith('#include ') else line for line in lines]
+ffi.cdef(''.join(altered_lines))
+
+if __name__ == '__main__':
+    ffi.compile()
+
+#+END_SRC
 
 ** Testing cpslib
-#+BEGIN_SRC python
-import psutil
-from pycpslib import lib as P 
+ #+BEGIN_SRC python
+   import psutil
+   from pycpslib import lib as P 
 
-def test_boot_time():
-    pslib_boot_time = P.get_boot_time()
-    psutil_boot_time = psutil.boot_time()
-    
-    assert pslib_boot_time == psutil_boot_time
-#+END_SRC
-  - Useful to prevent regressions.
-  - For feature parity.
-  - To verify functionality on new kernels/platforms.
+   def test_boot_time():
+       pslib_boot_time = P.get_boot_time()
+       psutil_boot_time = psutil.boot_time()
+
+       assert pslib_boot_time == psutil_boot_time
+ #+END_SRC
+   - Useful to prevent regressions.
+   - For feature parity.
+   - To verify functionality on new kernels/platforms.
 * Some extras
 ** Test coverage
    - =gcov= allows us to measure coverage of C files.
