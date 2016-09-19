@@ -3,7 +3,8 @@
 from cffi import FFI
 
 ffi = FFI()
-ffi.set_source('pyleftpad', '',
+ffi.set_source('pyleftpad', 
+               'char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);',
                libraries=["leftpad"],
                library_dirs=['.'])
 
