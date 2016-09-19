@@ -6,7 +6,7 @@ c_leftpad.left_pad_string.restype = c_char_p
 
 def leftpad(ip):
     ip = ip.encode('ascii')
-    ret = c_leftpad.left_pad_string(ip, len(ip), 15)
+    ret = c_leftpad.left_pad_string(ip, len(ip), 20)
     return ret.decode('ascii')
 
 print ("'%s'"%(leftpad("python")))
