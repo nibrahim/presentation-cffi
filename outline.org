@@ -1,7 +1,7 @@
 #+STARTUP: beamer
 #+TITLE: Testing native binaries using CFFI
 #+AUTHOR: Noufal Ibrahim
-#+OPTIONS: H:2 toc:t num:t
+#+OPTIONS: H:2 toc:nil num:t
 #+LATEX_CLASS: beamer
 #+LATEX_CLASS_OPTIONS: [presentation]
 #+LATEX_HEADER: \usepackage{listings}
@@ -11,12 +11,14 @@
 
 * Introduction
 ** About me
-   - Founder of Hamon Technologies and Co founder of Pipal Academy.
-   - Automation/Infrastructure/IoT work and trainings.
+   - Founder of Hamon Technologies - Automation/Infrastructure/IoT
+   - Co-Founder of Pipal academy - Niche trainings.
    - Also mentor students via. The Lyc\ae{}um.
    - Long time Python user and been involved with PyCon since the
      first conference.
-   - Amateur Calligrapher.
+   - =@noufalibrahim=
+** Outline 
+   #+TOC: headlines 2
 ** Coupling between languages
    - Web based APIs.
    #+BEAMER: \pause         
@@ -38,8 +40,6 @@
    - cpslib is a port of psutil to C.
    - Allows you to query process and system information in a cross
      platform fashion (e.g. number of CPUs etc.)
-   - Example
-
      #+BEGIN_SRC c
        uint32_t cpu_count(bool);
 
@@ -64,23 +64,9 @@
    cdll.cpu_count(False) # 1
   #+END_SRC
    - A little more complex with compound types
-
 ** Leftpad
   #+BEGIN_SRC c
-    char * left_pad_string(char *ip, size_t ip_count, size_t pad_count)
-    {
-      char * ret;
-      uint32_t i, j;
-      ret = (char *)calloc(pad_count, sizeof(char));
-      for (i=0; i<(pad_count - ip_count); i++) {
-        ret[i] = ' ';
-      }
-      for (j=0; j<ip_count; j++, i++) {
-        ret[i] = ip[j];
-      }
-      ret[i] = '\0';
-      return ret;
-    }
+  char * left_pad_string(char *ip, size_t ip_count, size_t pad_count);
   #+END_SRC
 
   #+BEGIN_src shell
@@ -96,13 +82,13 @@
 
   def leftpad(ip):
       ip = ip.encode('ascii')
-      ret = c_leftpad.left_pad_string(ip, len(ip), 15)
+      ret = c_leftpad.left_pad_string(ip, len(ip), 20)
       return ret.decode('ascii')
 
-  print ("'%s'"%(leftpad("python"))) # '         python'
+  print ("'%s'"%(leftpad("python"))) # '              python'
   #+END_SRC
 
-** Standard library
+** Ctypes
  - Works on pypy, cpython and even jython.
  - This is great. Why cffi then?
 ** CFFI 
@@ -177,9 +163,9 @@ print ("Ctypes ", timeit.timeit(lambda : ctypes_leftpad("python")))
 #+END_SRC
 
 #+BEGIN_EXAMPLE
-CFFI API 2.052793896989897
-CFFI ABI 2.603409282004577
-Ctypes   2.907925626001088
+CFFI API 2.1375274590009212
+CFFI ABI 2.7309077310001157
+Ctypes   2.9284197089982626
 #+END_EXAMPLE
 
 * Testing libraries
@@ -219,9 +205,9 @@ def test_boot_time():
 ** Test coverage
    - =gcov= allows us to measure coverage of C files.
    - You compile with a few extra flags 
-     #+BEGIN_EXAMPLE
+     #+BEGIN_SRC shell
      gcc -fprofile-arcs -ftest-coverage -o leftpad leftpad.c
-     #+END_EXAMPLE
+     #+END_SRC
    - Compiling it will produce a =.gcno= file (the call graph)
 #+BEAMER: \pause
    - Then run it =./leftpad=
@@ -235,15 +221,11 @@ def test_boot_time():
    - It will automatically do all this for you and print coverage
      statistics at the end.
    - Lots of limitations but "works for me".
-** Language barriers
-   - Once you get the =.so=, =cffi= will work.
-   - Needn't be generated from C. 
+** Thanks
+   - =noufal@nibrahim.net.in=
+   - =@noufalibrahim=
+   - =github.com/nibrahim=
 
 
-* TODO 
-  - [ ] Why the warnings when compiling the module?
-  - [ ] Demo with PyPy as well 
-     
-  
 
 
