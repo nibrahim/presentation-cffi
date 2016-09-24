@@ -14,7 +14,7 @@
    - Founder of Hamon Technologies - Automation/Infrastructure/IoT
    - Co-Founder of Pipal academy - Niche trainings.
    - Also mentor students via. The Lyc\ae{}um.
-   - Long time Python user and been involved with PyCon since the
+   - Long time Python user and been involved with PyCon India since the
      first conference.
    - =@noufalibrahim=
 ** Outline 
@@ -40,7 +40,8 @@
    - cpslib is a port of psutil to C.
    - Allows you to query process and system information in a cross
      platform fashion (e.g. number of CPUs etc.)
-     #+BEGIN_SRC c
+   #+BEGIN_SRC c
+       /* cpu_count.c */
        #include <inttypes.h>
        #include <stdio.h>
        #include <stdbool.h>
@@ -54,9 +55,9 @@
          printf("Physical : %" PRIu32 "\n", physical);
        }
 
-     #+END_SRC
+  #+END_SRC
   #+BEGIN_src shell
-  $ gcc -std=gnu11 -L /home/noufal/projects/cpslib/ cpu_count.c -o cpu_count -lpslib
+  $ gcc -std=gnu11 -L. cpu_count.c -o cpu_count -lpslib
   $ ./cpu_count
   Physical : 1
   #+END_SRC
@@ -112,6 +113,7 @@
 ** CFFI using ABI
    - Similar to ctypes
 #+BEGIN_SRC python
+  # leftpad_cffi_abi.py
   import cffi
 
   ffi = cffi.FFI()
@@ -130,6 +132,7 @@
 ** CFFI Using API  
    - We need a build script for this
 #+BEGIN_SRC python
+  # leftpad_cffi_build.py
   from cffi import FFI
 
   ffi = FFI()
@@ -154,6 +157,8 @@
 
 ** Using the generated C extension
    #+BEGIN_SRC python
+     # leftpad_cffi_api.py
+
      import pyleftpad # Loads a native C extension
 
      def leftpad(ip):
@@ -190,7 +195,7 @@ Ctypes   2.9284197089982626
    - An example test for =left_pad_string= would be
 
 #+BEGIN_SRC python
-  # test_leftpad
+  # test_leftpad.py
   from leftpad_cffi_api import leftpad
 
   def test_leftpad():
