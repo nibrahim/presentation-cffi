@@ -41,6 +41,10 @@
    - Allows you to query process and system information in a cross
      platform fashion (e.g. number of CPUs etc.)
      #+BEGIN_SRC c
+       #include <inttypes.h>
+       #include <stdio.h>
+       #include <stdbool.h>
+
        uint32_t cpu_count(bool);
 
        void main() 
@@ -51,6 +55,12 @@
        }
 
      #+END_SRC
+  #+BEGIN_src shell
+  $ gcc -std=gnu11 -L /home/noufal/projects/cpslib/ cpu_count.c -o cpu_count -lpslib
+  $ ./cpu_count
+  Physical : 1
+  #+END_SRC
+
    - The original idea was to make it compatible with psutils.
    - So we have something to test against.
 
@@ -66,7 +76,7 @@
    - A little more complex with compound types
 ** Leftpad
   #+BEGIN_SRC c
-  char * left_pad_string(char *ip, size_t ip_count, size_t pad_count);
+    char * left_pad_string(char *ip, size_t ip_count, size_t pad_count);
   #+END_SRC
 
   #+BEGIN_src shell
@@ -222,11 +232,11 @@ if __name__ == '__main__':
    import psutil
    from pycpslib import lib as P 
 
-   def test_boot_time():
-       pslib_boot_time = P.get_boot_time()
-       psutil_boot_time = psutil.boot_time()
+   def test_logical_cpu_count(flush):
+       assert P.cpu_count(1) == psutil.cpu_count(True)
 
-       assert pslib_boot_time == psutil_boot_time
+   def test_physical_cpu_count(flush):
+       assert P.cpu_count(0) == psutil.cpu_count(False)
  #+END_SRC
    - Useful to prevent regressions.
    - For feature parity.
