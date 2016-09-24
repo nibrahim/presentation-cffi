@@ -11,3 +11,4 @@ a.out
 *.pdf
 pyleftpad.c
 .cache/
+cpu_count
