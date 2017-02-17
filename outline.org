@@ -4,9 +4,10 @@
 #+OPTIONS: H:2 toc:nil num:t
 #+LATEX_CLASS: beamer
 #+LATEX_CLASS_OPTIONS: [presentation]
+#+LATEX_HEADER: \usepackage[frenchstyle]{kpfonts}
 #+LATEX_HEADER: \usepackage{listings}
 #+LATEX_HEADER: \usefonttheme{serif} % default family is serif
-#+LATEX_HEADER: \lstset{basicstyle=\tiny \ttfamily, showspaces=false, showstringspaces=false, keywordstyle=\color{blue}, commentstyle=\color{gray}, stringstyle=\color{magenta}, frame=single}
+#+LATEX_HEADER: \lstset{basicstyle=\small \ttfamily, showspaces=false, showstringspaces=false, keywordstyle=\color{blue}, commentstyle=\color{gray}, stringstyle=\color{magenta}, frame=single}
 #+BEAMER_THEME: Singapore
 
 * Introduction
@@ -17,6 +18,13 @@
    - Long time Python user and been involved with PyCon India since the
      first conference.
    - =@noufalibrahim=
+** About the presentation
+   - Last presented at PyCon India 2016.
+   - Been using cffi a little more heavily since then.
+   - Replaced Cython etc.
+   #+BEAMER: \pause         
+   - Ideas updated but slides are not.
+   - Everything here still holds
 ** Outline 
    #+TOC: headlines 2
 ** Coupling between languages
@@ -40,6 +48,7 @@
    - cpslib is a port of psutil to C.
    - Allows you to query process and system information in a cross
      platform fashion (e.g. number of CPUs etc.)
+** Cpslib
    #+BEGIN_SRC c
        /* cpu_count.c */
        #include <inttypes.h>
@@ -56,8 +65,11 @@
        }
 
   #+END_SRC
+
+** Cpslib
   #+BEGIN_src shell
-  $ gcc -std=gnu11 -L. cpu_count.c -o cpu_count -lpslib
+  $ gcc -std=gnu11 -L. cpu_count.c \
+    -o cpu_count -lpslib
   $ ./cpu_count
   Physical : 1
   #+END_SRC
@@ -77,26 +89,33 @@
    - A little more complex with compound types
 ** Leftpad
   #+BEGIN_SRC c
-    char * left_pad_string(char *ip, size_t ip_count, size_t pad_count);
+    char * left_pad_string(char *ip, 
+                           size_t ip_count, 
+                           size_t pad_count);
   #+END_SRC
 
   #+BEGIN_src shell
-  $ gcc -fPIC -shared -std=gnu11 -Wall -Wextra -Wunused -o libleftpad.so leftpad.c
+  $ gcc -fPIC -shared -std=gnu11 \
+    -o libleftpad.so leftpad.c
   #+END_SRC
 
+** Leftpad with ctypes
   #+BEGIN_SRC python
   from ctypes import *
-  leftpad = CDLL("./libleftpad.so")
+  c_leftpad = CDLL("./libleftpad.so")
 
-  leftpad.left_pad_string.argtypes = [c_char_p, c_size_t, c_size_t]
-  leftpad.left_pad_string.restype = c_char_p
+  c_leftpad.left_pad_string.argtypes = [c_char_p, 
+                                        c_size_t, 
+                                        c_size_t]
+  c_leftpad.left_pad_string.restype = c_char_p
 
   def leftpad(ip):
       ip = ip.encode('ascii')
       ret = c_leftpad.left_pad_string(ip, len(ip), 20)
       return ret.decode('ascii')
 
-  print ("'%s'"%(leftpad("python"))) # '              python'
+  print ("'%s'"%(leftpad("python"))) 
+  # prints '              python'
   #+END_SRC
 
 ** Ctypes
@@ -117,7 +136,8 @@
   import cffi
 
   ffi = cffi.FFI()
-  ffi.cdef("char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);")
+  ffi.cdef("""char *left_pad_string(char *ip, 
+  size_t ip_count, size_t pad_count);""")
 
   c_leftpad = ffi.dlopen("./libleftpad.so")
 
@@ -126,10 +146,11 @@
       op = c_leftpad.left_pad_string(ip, len(ip), 20)
       return ffi.string(op).decode('ascii')
 #+END_SRC
+** CFFI using ABI
    - We have to guess memory layout and calling conventions here.
    - This is hard to get right
    - The compiler is what usually does this for us
-** CFFI Using API  
+** CFFI using API  
    - We need a build script for this
 #+BEGIN_SRC python
   # leftpad_cffi_build.py
@@ -140,11 +161,13 @@
                  libraries=["leftpad"],
                  library_dirs=['.'])
 
-  ffi.cdef("char *left_pad_string(char *ip, size_t ip_count, size_t pad_count);")
+  ffi.cdef("""char *left_pad_string(char *ip, 
+  size_t ip_count, size_t pad_count);""")
 
   if __name__ == '__main__':
       ffi.compile()
 #+END_SRC
+** CFFI using API
   - Run this to get a =pyleftpad.so=. A native C extension. 
 #+BEAMER: \pause
   - Yup. No more manual C extensions and
@@ -153,7 +176,6 @@
     too.
 #+BEAMER: \pause
   - Though higher level abstractions are usually a good idea.
-
 
 ** Using the generated C extension
    #+BEGIN_SRC python
@@ -164,21 +186,26 @@
      def leftpad(ip):
          ip = ip.encode('ascii')
          # Don't forget the .lib.
-         op = pyleftpad.lib.left_pad_string(ip, len(ip), 20)
+         op = pyleftpad.lib.left_pad_string(ip, 
+                                            len(ip), 
+                                            20)
          return pyleftpad.ffi.string(op).decode('ascii')
     #+END_SRC
 ** Some quick performance numbers
 #+BEGIN_SRC python
-# perf.py
-import timeit
+  # perf.py
+  import timeit
 
-from leftpad_ctypes import leftpad as ctypes_leftpad
-from leftpad_cffi_abi import leftpad as cffi_abi_leftpad
-from leftpad_cffi_api import leftpad as cffi_api_leftpad
+  from leftpad_ctypes import leftpad as ctypes
+  from leftpad_cffi_abi import leftpad as abi
+  from leftpad_cffi_api import leftpad as api
 
-print ("CFFI API", timeit.timeit(lambda : cffi_api_leftpad("python")))
-print ("CFFI ABI", timeit.timeit(lambda : cffi_abi_leftpad("python")))
-print ("Ctypes ", timeit.timeit(lambda : ctypes_leftpad("python")))
+  print ("CFFI API", 
+         timeit.timeit(lambda : api("python")))
+  print ("CFFI ABI", 
+         timeit.timeit(lambda : abi("python")))
+  print ("Ctypes ", 
+         timeit.timeit(lambda : ctypes("python")))
 #+END_SRC
 
 #+BEGIN_EXAMPLE
@@ -206,30 +233,29 @@ Ctypes   2.9284197089982626
    - Can be run using =py.test=
 
 ** Wrapping cpslib
+#+ATTR_LATEX: :options \lstset{basicstyle=\footnotesize, \ttfamily, showspaces=false, showstringspaces=false, keywordstyle=\color{blue}, commentstyle=\color{gray}, stringstyle=\color{magenta}, frame=single}
 #+BEGIN_SRC python
-ffi.set_source("pycpslib",
-               """#include <stdio.h>
-               #include <stdlib.h>
-               #include <sys/types.h>
-               #include <unistd.h>
-               #include "pslib.h"
-               """,
-               libraries = ["pslib"],
-               library_dirs = [project_root],
-               include_dirs = [project_root])
+  ffi.set_source("pycpslib",
+                 """#include <stdio.h>
+                 #include <stdlib.h>
+                 #include <sys/types.h>
+                 #include <unistd.h>
+                 #include "pslib.h"
+                 """,
+                 libraries = ["pslib"],
+                 library_dirs = [project_root],
+                 include_dirs = [project_root])
 
-ffi.cdef('''
-typedef int32_t pid_t;
-typedef int32_t bool;
-''')
+  ffi.cdef('''typedef int32_t pid_t;
+  typedef int32_t bool;''')
 
-with lines = open("../pslib.h").readlines()
-altered_lines = ['' if line.startswith('#include ') else line for line in lines]
-ffi.cdef(''.join(altered_lines))
+  lines = open("../pslib.h").readlines()
+  alines = ['' if l.startswith('#include ') else \
+            l for l in lines]
+  ffi.cdef(''.join(alines))
 
-if __name__ == '__main__':
-    ffi.compile()
-
+  if __name__ == '__main__':
+      ffi.compile()
 #+END_SRC
 
 ** Testing cpslib
@@ -251,7 +277,8 @@ if __name__ == '__main__':
    - =gcov= allows us to measure coverage of C files.
    - You compile with a few extra flags 
      #+BEGIN_SRC shell
-     gcc -fprofile-arcs -ftest-coverage -o leftpad leftpad.c
+     gcc -fprofile-arcs -ftest-coverage -o leftpad\
+     leftpad.c
      #+END_SRC
    - Compiling it will produce a =.gcno= file (the call graph)
 #+BEAMER: \pause
